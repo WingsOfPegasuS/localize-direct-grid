@@ -1,53 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { saveFile } from "@grapecity/wijmo";
 import { FlexGrid } from "@grapecity/wijmo.react.grid";
 import { CellRange } from "@grapecity/wijmo.grid";
 import "@grapecity/wijmo.styles/wijmo.css";
 
-// Generate random data!
-const getData = (cnt, start) => {
-  let data = [];
-  if (!start) start = 0;
-  for (let i = 0; i < cnt; i++) {
-    data.push({
-      ID: i + start,
-      A: Math.random() * 10000,
-      B: Math.random() * 10000,
-      C: Math.random() * 10000,
-      D: Math.random() * 10000,
-      E: Math.random() * 10000,
-      F: Math.random() * 10000,
-      G: Math.random() * 10000,
-      H: Math.random() * 10000,
-      I: Math.random() * 10000,
-      J: Math.random() * 10000,
-      K: Math.random() * 10000,
-      L: Math.random() * 10000,
-      M: Math.random() * 10000,
-      N: Math.random() * 10000,
-      O: Math.random() * 10000,
-      P: Math.random() * 10000,
-      Q: Math.random() * 10000,
-      R: Math.random() * 10000,
-      S: Math.random() * 10000,
-      T: Math.random() * 10000,
-      U: Math.random() * 10000,
-      V: Math.random() * 10000,
-      W: Math.random() * 10000,
-      X: Math.random() * 10000,
-      Y: Math.random() * 10000,
-      Z: Math.random() * 10000,
-    });
-  }
-  return data;
-};
-
 const LocalizeDirectGrid = () => {
   let grid = null;
   const [currentGrid, setCurrentGrid] = useState(null);
-  const [gridData, setGridData] = useState(getData(100));
+  const [gridData, setGridData] = useState([]);
   const [selectionAllow, setSelectionAllow] = useState(false);
   const [rowCount, setRowCount] = useState(0);
+
+  useEffect(() => {
+    let url = `http://localhost:3000/data?_start=0&_end=100`;
+    var initialList = [];
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        for (let i = 0; i < data?.length; i++) {
+          initialList.push(data[i]);
+        }
+        setGridData(initialList);
+      });
+  }, []);
 
   // Initialize grid!
   const initializeGrid = (obj) => {
@@ -61,7 +36,7 @@ const LocalizeDirectGrid = () => {
       if (s.viewRange.bottomRow >= s.rows.length - 1) {
         let view = s.collectionView;
         let index = view.currentPosition;
-        handleAddData(gridData, 20);
+        handleAddData(s.rows.length);
         view.refresh();
         view.currentPosition = index;
       }
@@ -87,12 +62,17 @@ const LocalizeDirectGrid = () => {
   };
 
   // Add new rows!
-  const handleAddData = (data, cnt) => {
-    let more = getData(cnt, data?.length);
-    for (let i = 0; i < more?.length; i++) {
-      gridData?.push(more[i]);
-    }
-    setGridData(gridData);
+  const handleAddData = (rowCount) => {
+    let url = `http://localhost:3000/data?_start=${rowCount - 1}&_end=${
+      rowCount + 99
+    }`;
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        for (let i = 0; i < data?.length; i++) {
+          setGridData((gridData) => [...gridData, data[i]]);
+        }
+      });
   };
 
   return (
@@ -138,6 +118,7 @@ const LocalizeDirectGrid = () => {
           setCurrentGrid(grid);
         }}
       />
+      )
     </div>
   );
 };
